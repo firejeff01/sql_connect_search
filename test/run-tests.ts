@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { spawn } from "node:child_process";
-import { mkdtemp, readdir, writeFile } from "node:fs/promises";
+import { mkdtemp, readdir, readFile, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { AuditLogger } from "../src/audit/AuditLogger.ts";
@@ -335,7 +335,7 @@ async function testRegistryAndServer(): Promise<void> {
   await stdioServer.start({ configPath: join(process.cwd(), "config/default.yaml") });
   assert.equal(stdioServer.getStatus(), "running");
   assert.equal(stdioServer.getTransportType(), "stdio");
-  assert.equal(stdioServer.getToolRegistry().getRegisteredTools().length, 5);
+  assert.equal(stdioServer.getToolRegistry().getRegisteredTools().length, 7);
   const initializeResponse = await stdioServer.handleProtocolMessage({
     jsonrpc: "2.0",
     id: 1,
@@ -780,6 +780,96 @@ async function testRegistryAndServer(): Promise<void> {
   await stdioServer.stop();
 }
 
+async function testLazySetupFlow(): Promise<void> {
+  const dir = await mkdtemp(join(tmpdir(), "sql-connect-search-lazy-setup-"));
+  const configPath = join(dir, "config.yaml");
+  const server = new MCPServer();
+  await server.start({ configPath });
+
+  const toolsListResponse = await server.handleProtocolMessage({
+    jsonrpc: "2.0",
+    id: 30,
+    method: "tools/list",
+    params: {}
+  });
+  assert.equal("result" in toolsListResponse, true);
+  if ("result" in toolsListResponse) {
+    const tools = (toolsListResponse.result as { tools: Array<{ name: string }> }).tools;
+    assert.equal(tools.some((tool) => tool.name === "get_setup_status"), true);
+    assert.equal(tools.some((tool) => tool.name === "configure_mysql_connection"), true);
+  }
+
+  const setupStatusResponse = await server.handleProtocolMessage({
+    jsonrpc: "2.0",
+    id: 31,
+    method: "tools/call",
+    params: {
+      name: "get_setup_status",
+      arguments: {}
+    }
+  });
+  assert.equal("result" in setupStatusResponse, true);
+  if ("result" in setupStatusResponse) {
+    const payload = (setupStatusResponse.result as { content: Array<{ json: { configured: boolean; configExists: boolean } }> })
+      .content[0].json;
+    assert.equal(payload.configured, false);
+    assert.equal(payload.configExists, false);
+  }
+
+  const configureResponse = await server.handleProtocolMessage({
+    jsonrpc: "2.0",
+    id: 32,
+    method: "tools/call",
+    params: {
+      name: "configure_mysql_connection",
+      arguments: {
+        host: "127.0.0.1",
+        port: 3306,
+        database: "shop",
+        username: "root",
+        password: "lazy-secret",
+        aliases: ["shop"]
+      }
+    }
+  });
+  assert.equal("result" in configureResponse, true);
+  if ("result" in configureResponse) {
+    const payload = (configureResponse.result as {
+      content: Array<{
+        json: { configured: boolean; configPath: string; defaultConnection: string };
+      }>;
+    }).content[0].json;
+    assert.equal(payload.configured, true);
+    assert.equal(payload.configPath, configPath);
+    assert.equal(payload.defaultConnection, "default-mysql");
+  }
+
+  const configContent = await readFile(configPath, "utf8");
+  assert.match(configContent, /default-mysql/);
+  const envContent = await readFile(join(dir, ".env"), "utf8");
+  assert.match(envContent, /MYSQL_LIVE_PASSWORD=lazy-secret/);
+
+  const listConnectionsResponse = await server.handleProtocolMessage({
+    jsonrpc: "2.0",
+    id: 33,
+    method: "tools/call",
+    params: {
+      name: "list_connections",
+      arguments: {}
+    }
+  });
+  assert.equal("result" in listConnectionsResponse, true);
+  if ("result" in listConnectionsResponse) {
+    const payload = (listConnectionsResponse.result as {
+      content: Array<{ json: Array<{ name: string; database: string }> }>;
+    }).content[0].json;
+    assert.equal(payload.length, 1);
+    assert.equal(payload[0].database, "shop");
+  }
+
+  await server.stop();
+}
+
 function testStepDefinitionsLoaded(): void {
   assert.equal(getRegisteredSteps().length > 0, true);
 }
@@ -845,6 +935,7 @@ async function main(): Promise<void> {
   await testSchemaCachePersistence();
   await testQueryTool();
   await testRegistryAndServer();
+  await testLazySetupFlow();
   testStepDefinitionsLoaded();
   await testFeatureRunner();
   await testLiveMySqlIfConfigured();

@@ -82,6 +82,7 @@ export class QueryDatabaseTool implements ToolDefinition<QueryDatabaseInput, Que
   }
 
   async execute(input: QueryDatabaseInput, context?: { client?: string }): Promise<QueryResult> {
+    this.connectionManager.ensureConfigured();
     const validation = this.validator.validate(input.query);
     if (!validation.valid) {
       throw new Error(validation.error);

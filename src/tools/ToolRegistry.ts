@@ -3,6 +3,10 @@ import type { ToolDefinition } from "./ITool.ts";
 export class ToolRegistry {
   private readonly tools = new Map<string, ToolDefinition<unknown, unknown>>();
 
+  clear(): void {
+    this.tools.clear();
+  }
+
   registerTools(tools: ToolDefinition<unknown, unknown>[]): void {
     for (const tool of tools) {
       this.tools.set(tool.name, tool);

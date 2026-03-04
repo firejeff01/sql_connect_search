@@ -22,8 +22,8 @@ function validateConnection(connection: ConnectionConfig): void {
 
 export class ConfigValidator {
   static validate(config: ServerConfig): ServerConfig {
-    if (!Array.isArray(config.connections) || config.connections.length === 0) {
-      throw new ConfigValidationError("At least one connection is required");
+    if (!Array.isArray(config.connections)) {
+      throw new ConfigValidationError("connections must be an array");
     }
 
     for (const connection of config.connections) {

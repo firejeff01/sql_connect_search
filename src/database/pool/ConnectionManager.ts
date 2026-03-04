@@ -1,5 +1,6 @@
 import type { LimitsConfig } from "../../config/IConfig.ts";
 import type { ConnectionCapabilities, ConnectionConfig, ConnectionInfo, PoolConfig } from "../../types/connection.ts";
+import { SetupRequiredError } from "../../errors/SetupRequiredError.ts";
 import { DriverFactory } from "../drivers/DriverFactory.ts";
 import type { IDriverAdapter } from "../drivers/IDriverAdapter.ts";
 import { ConnectionPool } from "./ConnectionPool.ts";
@@ -32,6 +33,28 @@ export class ConnectionManager {
     }
   }
 
+  async destroyPools(): Promise<void> {
+    const pools = [...this.pools.values()];
+    this.pools.clear();
+    this.aliases.clear();
+    this.connections.clear();
+    await Promise.all(pools.map((pool) => pool.destroy()));
+  }
+
+  hasConnections(): boolean {
+    return this.connections.size > 0;
+  }
+
+  ensureConfigured(): void {
+    if (!this.hasConnections()) {
+      throw new SetupRequiredError("No database connections are configured yet.", {
+        suggestedTool: "configure_mysql_connection",
+        missingFields: ["host", "port", "database", "username", "password"],
+        suggestedConnectionType: "mysql2"
+      });
+    }
+  }
+
   listConnections(): ConnectionInfo[] {
     return [...this.connections.values()].map((connection) => ({
       name: connection.name,
@@ -56,6 +79,7 @@ export class ConnectionManager {
     if (!actualName) {
       throw new Error("connection_name is required");
     }
+    this.ensureConfigured();
 
     const resolvedName = this.aliases.get(actualName) ?? actualName;
     const pool = this.pools.get(resolvedName);

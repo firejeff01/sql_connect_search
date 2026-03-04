@@ -1,15 +1,20 @@
 import { dirname, resolve } from "node:path";
 import type { ServerConfig } from "../config/IConfig.ts";
 import { AuditLogger } from "../audit/AuditLogger.ts";
+import { configFileExists } from "../config/DefaultConfigPaths.ts";
 import { ConfigLoader } from "../config/ConfigLoader.ts";
+import { createDefaultServerConfig, saveConfig, savePasswordEnvFile, upsertConnection } from "../config/ConfigStore.ts";
 import { ConnectionManager } from "../database/pool/ConnectionManager.ts";
 import { CredentialResolver } from "../credential/CredentialResolver.ts";
+import { SetupRequiredError } from "../errors/SetupRequiredError.ts";
 import { MongoValidator } from "../security/MongoValidator.ts";
 import { SQLValidator } from "../security/SQLValidator.ts";
 import { SchemaCache } from "../schema/SchemaCache.ts";
 import { SchemaService } from "../schema/SchemaService.ts";
+import { ConfigureMySqlConnectionTool, type ConfigureMySqlConnectionInput } from "../tools/ConfigureMySqlConnectionTool.ts";
 import { DescribeTablesTool } from "../tools/DescribeTablesTool.ts";
 import { DiscoverSchemaTool } from "../tools/DiscoverSchemaTool.ts";
+import { GetSetupStatusTool, type SetupStatusResult } from "../tools/GetSetupStatusTool.ts";
 import type { ToolDefinition } from "../tools/ITool.ts";
 import { ListConnectionsTool } from "../tools/ListConnectionsTool.ts";
 import { MongoDBQueryTool } from "../tools/MongoDBQueryTool.ts";
@@ -64,6 +69,8 @@ export class MCPServer {
   private schemaService?: SchemaService;
   private schemaCache?: SchemaCache;
   private initializedClient?: InitializeParams;
+  private configPath?: string;
+  private configExistsOnDisk = false;
 
   getStatus(): string {
     return this.status;
@@ -91,6 +98,30 @@ export class MCPServer {
 
   getAuditLogger(): AuditLogger | undefined {
     return this.auditLogger;
+  }
+
+  private getRuntimeConfig(): ServerConfig {
+    if (!this.config) {
+      throw new Error("Server is not initialized");
+    }
+    return this.config;
+  }
+
+  private getSetupStatus(): SetupStatusResult {
+    const config = this.config ?? createDefaultServerConfig();
+    const connectionCount = config.connections.length;
+    return {
+      configured: connectionCount > 0,
+      configPath: this.configPath ?? "",
+      configExists: this.configExistsOnDisk,
+      connectionCount,
+      defaultConnection: config.default_connection,
+      missingFields: connectionCount > 0 ? [] : ["host", "port", "database", "username", "password"],
+      message:
+        connectionCount > 0
+          ? "At least one database connection is configured."
+          : "No database connections are configured yet. Use configure_mysql_connection before running schema discovery or queries."
+    };
   }
 
   private detectHostKind(params?: InitializeParams): "claude_desktop" | "openai" | "generic" {
@@ -146,7 +177,9 @@ export class MCPServer {
         }
       },
       instructions:
-        "Use resources/read for schema context before tools/call when the table layout is unclear. Only issue read-only SQL.",
+        this.getSetupStatus().configured
+          ? "Use resources/read for schema context before tools/call when the table layout is unclear. Only issue read-only SQL."
+          : "If the user wants database access and no connection is configured yet, call get_setup_status or configure_mysql_connection before running database tools.",
       _meta: {
         acceptedProtocolVersion,
         acknowledgedClientInfo: params?.clientInfo,
@@ -320,6 +353,94 @@ export class MCPServer {
     };
   }
 
+  private async applyConfig(config: ServerConfig): Promise<void> {
+    if (this.connectionManager) {
+      await this.connectionManager.destroyPools();
+    }
+
+    this.config = config;
+    this.connectionManager = new ConnectionManager(config.limits, config.default_connection);
+    await this.connectionManager.createPools(config.connections, config.pool);
+    this.auditLogger = new AuditLogger(config.audit);
+    this.schemaService = new SchemaService(config.limits);
+    this.schemaCache = new SchemaCache(
+      this.schemaCacheTtlMs,
+      resolve(dirname(this.configPath ?? resolve("config/default.yaml")), ".schema-cache")
+    );
+
+    this.toolRegistry.clear();
+    this.registerTools();
+  }
+
+  private registerTools(): void {
+    if (!this.connectionManager || !this.auditLogger || !this.schemaService || !this.schemaCache || !this.configPath) {
+      throw new Error("Server is not initialized");
+    }
+
+    const sqlValidator = new SQLValidator();
+    const mongoValidator = new MongoValidator();
+    const configPath = this.configPath;
+
+    this.toolRegistry.registerTools([
+      new GetSetupStatusTool(() => this.getSetupStatus()),
+      new ConfigureMySqlConnectionTool((input) => this.configureMySqlConnection(input)),
+      new ListConnectionsTool(this.connectionManager),
+      new DescribeTablesTool(this.connectionManager, this.schemaService),
+      new QueryDatabaseTool(this.connectionManager, sqlValidator, this.auditLogger, this.config!.limits),
+      new MongoDBQueryTool(this.connectionManager, mongoValidator, this.auditLogger, this.config!.limits),
+      new DiscoverSchemaTool(this.connectionManager, this.schemaService, this.schemaCache)
+    ]);
+  }
+
+  private async configureMySqlConnection(
+    input: ConfigureMySqlConnectionInput
+  ): Promise<{
+    configured: boolean;
+    connectionName: string;
+    configPath: string;
+    envPath?: string;
+    defaultConnection: string;
+    message: string;
+  }> {
+    const currentConfig = this.getRuntimeConfig();
+    const connectionName = input.connection_name?.trim() || "default-mysql";
+    const passwordEnvVar = input.password_env_var?.trim() || "MYSQL_LIVE_PASSWORD";
+    const nextConfig = upsertConnection(
+      currentConfig,
+      {
+        name: connectionName,
+        type: "mysql2",
+        host: input.host,
+        port: input.port ?? 3306,
+        database: input.database,
+        username: input.username,
+        passwordRef: `\${${passwordEnvVar}}`,
+        aliases: input.aliases?.filter((item) => item.trim().length > 0)
+      },
+      input.set_as_default ?? true
+    );
+
+    if (input.password) {
+      await savePasswordEnvFile(this.configPath!, passwordEnvVar, input.password);
+      process.env[passwordEnvVar] = input.password;
+    }
+
+    await saveConfig(this.configPath!, nextConfig);
+    this.configExistsOnDisk = true;
+    const loader = new ConfigLoader(this.credentialResolver);
+    const reloaded = await loader.loadConfig(this.configPath!);
+    await this.applyConfig(reloaded);
+
+    return {
+      configured: true,
+      connectionName,
+      configPath: this.configPath!,
+      envPath: input.password ? resolve(dirname(this.configPath!), ".env") : undefined,
+      defaultConnection: this.getRuntimeConfig().default_connection ?? connectionName,
+      message: "MySQL connection saved. Database tools can now be used."
+    };
+  }
+
   async handleProtocolMessage(request: JsonRpcRequest): Promise<JsonRpcHandlerResult> {
     const id = request.id ?? null;
     const isNotification = request.id === undefined;
@@ -386,15 +507,28 @@ export class MCPServer {
           });
       }
     } catch (error) {
+      if (!isNotification && error instanceof SetupRequiredError) {
+        return createJsonRpcError(id, -32050, error.message, {
+          category: "not_ready",
+          retryable: false,
+          source: "tool",
+          details: {
+            ...error.details,
+            setupStatus: this.getSetupStatus()
+          }
+        });
+      }
       return isNotification ? null : createJsonRpcErrorFromUnknown(id, error, "server");
     }
   }
 
   async start(options: ServerStartOptions): Promise<void> {
-    const loader = new ConfigLoader(this.credentialResolver);
     const absoluteConfigPath = resolve(options.configPath);
-    const loaded = await loader.loadConfig(absoluteConfigPath);
-    this.config = {
+    this.configPath = absoluteConfigPath;
+    this.configExistsOnDisk = await configFileExists(absoluteConfigPath);
+    const loader = new ConfigLoader(this.credentialResolver);
+    const loaded = this.configExistsOnDisk ? await loader.loadConfig(absoluteConfigPath) : createDefaultServerConfig();
+    const config = {
       ...loaded,
       http: loaded.http
         ? {
@@ -405,24 +539,10 @@ export class MCPServer {
         : loaded.http
     };
 
-    this.connectionManager = new ConnectionManager(this.config.limits, this.config.default_connection);
-    await this.connectionManager.createPools(this.config.connections, this.config.pool);
-    this.auditLogger = new AuditLogger(this.config.audit);
-    this.schemaService = new SchemaService(this.config.limits);
-    this.schemaCache = new SchemaCache(this.schemaCacheTtlMs, resolve(dirname(absoluteConfigPath), ".schema-cache"));
-    const sqlValidator = new SQLValidator();
-    const mongoValidator = new MongoValidator();
-
-    this.toolRegistry.registerTools([
-      new ListConnectionsTool(this.connectionManager),
-      new DescribeTablesTool(this.connectionManager, this.schemaService),
-      new QueryDatabaseTool(this.connectionManager, sqlValidator, this.auditLogger, this.config.limits),
-      new MongoDBQueryTool(this.connectionManager, mongoValidator, this.auditLogger, this.config.limits),
-      new DiscoverSchemaTool(this.connectionManager, this.schemaService, this.schemaCache)
-    ]);
+    await this.applyConfig(config);
 
     if (options.http) {
-      if (!this.config.http?.api_keys?.length) {
+      if (!this.config?.http?.api_keys?.length) {
         throw new Error("HTTP mode requires at least one API key");
       }
       this.transport = new HttpTransport(this.config.http);

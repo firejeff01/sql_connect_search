@@ -87,6 +87,7 @@ export class DescribeTablesTool implements ToolDefinition<DescribeTablesInput, T
   }
 
   async execute(input: DescribeTablesInput): Promise<TableDescription> {
+    this.connectionManager.ensureConfigured();
     const driver = this.connectionManager.resolveConnection(input.connection_name);
     return this.schemaService.describeTable(driver, input.table_name);
   }

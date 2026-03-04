@@ -97,6 +97,7 @@ export class MongoDBQueryTool implements ToolDefinition<MongoDBQueryInput, Query
   }
 
   async execute(input: MongoDBQueryInput, context?: { client?: string }): Promise<QueryResult> {
+    this.connectionManager.ensureConfigured();
     const operation = input.operation ?? "find";
     const opValidation = this.validator.validateOperation(operation);
     if (!opValidation.valid) {

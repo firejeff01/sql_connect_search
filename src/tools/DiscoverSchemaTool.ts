@@ -93,6 +93,7 @@ export class DiscoverSchemaTool implements ToolDefinition<DiscoverSchemaInput, S
   }
 
   async execute(input: DiscoverSchemaInput): Promise<SchemaOverview> {
+    this.connectionManager.ensureConfigured();
     const cacheKey = this.buildCacheKey(input);
     const cached = await this.schemaCache.get(cacheKey);
     if (cached) {
