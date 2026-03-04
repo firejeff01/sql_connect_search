@@ -36,7 +36,7 @@ const DEFAULT_TABLES: Record<string, TableDescription> = {
 
 function makeQueryResult(query: string): QueryResult {
   const lowered = query.toLowerCase();
-  const rows =
+  const rows: Record<string, unknown>[] =
     lowered.includes("orders")
       ? [
           { id: 1, customer_id: 10, status: "active" },
@@ -144,7 +144,7 @@ export abstract class AbstractDriver implements IDriverAdapter {
     },
     _options?: QueryOptions
   ): Promise<QueryResult> {
-    const rows =
+    const rows: Record<string, unknown>[] =
       operation === "listCollections"
         ? [{ name: "orders" }, { name: "customers" }]
         : operation === "countDocuments"

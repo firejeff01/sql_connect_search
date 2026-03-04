@@ -1,9 +1,9 @@
 export interface JsonSchemaProperty {
   type?: "string" | "number" | "integer" | "boolean" | "object" | "array";
   description?: string;
-  enum?: string[];
+  enum?: readonly string[];
   properties?: Record<string, JsonSchemaProperty>;
-  required?: string[];
+  required?: readonly string[];
   additionalProperties?: boolean | JsonSchemaProperty;
   items?: JsonSchemaProperty;
 }
@@ -11,7 +11,7 @@ export interface JsonSchemaProperty {
 export interface ToolInputSchema {
   type: "object";
   properties: Record<string, JsonSchemaProperty>;
-  required?: string[];
+  required?: readonly string[];
   additionalProperties?: boolean;
 }
 

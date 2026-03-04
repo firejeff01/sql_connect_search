@@ -3,23 +3,46 @@
   "version": "0.1.0",
   "description": "Read-only MCP-style database server for SQL and MongoDB access",
   "type": "module",
+  "license": "MIT",
+  "author": "firejeff01 <firejeff01@hotmail.com>",
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "database",
+    "mysql",
+    "claude",
+    "codex"
+  ],
+  "homepage": "https://github.com/firejeff01/sql_connect_search#readme",
+  "bugs": {
+    "url": "https://github.com/firejeff01/sql_connect_search/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/firejeff01/sql_connect_search.git"
+  },
   "bin": {
     "sql-connect-search-mcp": "./scripts/mcp-stdio-launcher.mjs"
   },
   "files": [
-    "src/",
+    "dist/",
     "config/*.yaml",
-    "scripts/",
+    "scripts/mcp-stdio-launcher.mjs",
+    "LICENSE",
     "README.md"
   ],
   "engines": {
     "node": ">=22.6.0"
   },
   "scripts": {
-    "start": "node --experimental-strip-types src/index.ts",
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/src/index.js",
     "mcp": "node scripts/mcp-stdio-launcher.mjs",
+    "mcp:dev": "node scripts/mcp-stdio-launcher.mjs",
     "start:launcher": "node scripts/mcp-stdio-launcher.mjs",
     "test": "node --experimental-strip-types test/run-tests.ts",
+    "prepare": "npm run build",
+    "prepack": "npm run build",
     "pack:check": "npm pack --dry-run --cache .npm-cache",
     "demo:mysql-live": "node --experimental-strip-types scripts/mysql-live-demo.ts",
     "demo:mysql-http": "node --experimental-strip-types scripts/mysql-http-demo.ts"
@@ -27,5 +50,9 @@
   "dependencies": {
     "mysql2": "^3.18.2",
     "yaml": "^2.8.2"
+  },
+  "devDependencies": {
+    "@types/node": "^25.3.3",
+    "typescript": "^5.9.3"
   }
 }

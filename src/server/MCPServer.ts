@@ -350,20 +350,29 @@ export class MCPServer {
           return isNotification ? null : createJsonRpcSuccess(id, this.createToolsListResult());
         case "tools/call":
           return isNotification
-            ? (await this.handleToolsCall((request.params ?? {}) as ToolsCallParams), null)
-            : createJsonRpcSuccess(id, await this.handleToolsCall((request.params ?? {}) as ToolsCallParams));
+            ? (await this.handleToolsCall((request.params ?? {}) as unknown as ToolsCallParams), null)
+            : createJsonRpcSuccess(
+                id,
+                await this.handleToolsCall((request.params ?? {}) as unknown as ToolsCallParams)
+              );
         case "resources/list":
           return isNotification ? null : createJsonRpcSuccess(id, this.createResourcesListResult());
         case "resources/read":
           return isNotification
-            ? (await this.handleResourcesRead((request.params ?? {}) as ResourcesReadParams), null)
-            : createJsonRpcSuccess(id, await this.handleResourcesRead((request.params ?? {}) as ResourcesReadParams));
+            ? (await this.handleResourcesRead((request.params ?? {}) as unknown as ResourcesReadParams), null)
+            : createJsonRpcSuccess(
+                id,
+                await this.handleResourcesRead((request.params ?? {}) as unknown as ResourcesReadParams)
+              );
         case "prompts/list":
           return isNotification ? null : createJsonRpcSuccess(id, this.createPromptsListResult());
         case "prompts/get":
           return isNotification
-            ? (await this.handlePromptsGet((request.params ?? {}) as PromptsGetParams), null)
-            : createJsonRpcSuccess(id, await this.handlePromptsGet((request.params ?? {}) as PromptsGetParams));
+            ? (await this.handlePromptsGet((request.params ?? {}) as unknown as PromptsGetParams), null)
+            : createJsonRpcSuccess(
+                id,
+                await this.handlePromptsGet((request.params ?? {}) as unknown as PromptsGetParams)
+              );
         case "roots/list":
           return isNotification ? null : createJsonRpcSuccess(id, this.createRootsListResult());
         default:

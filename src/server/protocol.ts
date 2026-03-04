@@ -89,7 +89,7 @@ export interface ToolDescriptor {
   inputSchema: {
     type: "object";
     properties: Record<string, unknown>;
-    required?: string[];
+    required?: readonly string[];
     additionalProperties?: boolean;
   };
   outputSchema: JsonSchemaProperty;

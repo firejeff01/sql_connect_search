@@ -123,6 +123,12 @@ Install dependencies:
 npm install
 ```
 
+Build the published `dist/` output:
+
+```powershell
+npm run build
+```
+
 Install a portable CLI command for this machine:
 
 ```powershell
@@ -182,6 +188,7 @@ Repository-local command:
 
 ```powershell
 $env:MYSQL_LIVE_PASSWORD='your-password'
+$env:SQL_CONNECT_SEARCH_DEV='1'
 npm run mcp -- --config config/shop-mysql.yaml
 ```
 
@@ -512,8 +519,37 @@ Invoke-RestMethod http://127.0.0.1:3100/mcp -Method Post -Headers $headers -Body
 
 - `sql-connect-search-mcp` is the published CLI name exposed from `package.json`
 - the bin entry points to [mcp-stdio-launcher.mjs](/D:/workspace/mcp/sql_connect_search/scripts/mcp-stdio-launcher.mjs)
-- clients can use the portable command after `npm link`, local install, or a future npm/GitHub package install
+- the published package runs from `dist/`, while local repo development can opt into source mode with `SQL_CONNECT_SEARCH_DEV=1`
+- clients can use the portable command after `npm link`, local install, or npm/GitHub package install
 - workspace files such as [.vscode/mcp.json](/D:/workspace/mcp/sql_connect_search/.vscode/mcp.json) and [.cursor/mcp.json](/D:/workspace/mcp/sql_connect_search/.cursor/mcp.json) remain repo-local examples and still use the in-repo path
+
+## Git Install Flow
+
+If someone installs from the GitHub repository instead of npm:
+
+```powershell
+git clone https://github.com/firejeff01/sql_connect_search.git
+cd sql_connect_search
+npm install
+npm link
+```
+
+`npm install` runs `prepare`, so `dist/` is built automatically before `npm link`.
+
+## NPM Publish Checklist
+
+```powershell
+npm login
+npm test
+npm run pack:check
+npm publish
+```
+
+After publish, clients can use:
+
+```powershell
+npx sql-connect-search-mcp@latest --config <path-to-config>
+```
 
 ## Recommended Next Steps
 

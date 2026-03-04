@@ -5,9 +5,14 @@ import { fileURLToPath } from "node:url";
 
 const scriptDir = dirname(fileURLToPath(import.meta.url));
 const projectRoot = resolve(scriptDir, "..");
-const entrypoint = resolve(projectRoot, "src", "index.ts");
+const devEntrypoint = resolve(projectRoot, "src", "index.ts");
+const distEntrypoint = resolve(projectRoot, "dist", "src", "index.js");
+const useDistEntrypoint = process.env.SQL_CONNECT_SEARCH_DEV !== "1";
+const entryArgs = useDistEntrypoint
+  ? [distEntrypoint, ...process.argv.slice(2)]
+  : ["--experimental-strip-types", devEntrypoint, ...process.argv.slice(2)];
 
-const child = spawn(process.execPath, ["--experimental-strip-types", entrypoint, ...process.argv.slice(2)], {
+const child = spawn(process.execPath, entryArgs, {
   cwd: projectRoot,
   stdio: "inherit",
   env: process.env
