@@ -5,7 +5,12 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { AuditLogger } from "../src/audit/AuditLogger.ts";
 import { ConfigLoader } from "../src/config/ConfigLoader.ts";
-import { createStarterConfigYaml, getDefaultConfigPath, writeStarterConfig } from "../src/config/DefaultConfigPaths.ts";
+import {
+  createStarterConfigYaml,
+  ensureStarterConfig,
+  getDefaultConfigPath,
+  writeStarterConfig
+} from "../src/config/DefaultConfigPaths.ts";
 import { ConnectionManager } from "../src/database/pool/ConnectionManager.ts";
 import { SchemaCache } from "../src/schema/SchemaCache.ts";
 import { MCPServer } from "../src/server/MCPServer.ts";
@@ -93,6 +98,17 @@ async function testDefaultConfigHelpers(): Promise<void> {
 
   const secondStatus = await writeStarterConfig(configPath, true);
   assert.equal(secondStatus, "overwritten");
+
+  const ensuredExisting = await ensureStarterConfig(configPath);
+  assert.equal(ensuredExisting, "existing");
+
+  const missingConfigPath = join(dir, "auto-created.yaml");
+  const ensuredCreated = await ensureStarterConfig(missingConfigPath);
+  assert.equal(ensuredCreated, "created");
+  const ensuredLoader = new ConfigLoader();
+  const ensuredConfig = await ensuredLoader.loadConfig(missingConfigPath);
+  assert.equal(ensuredConfig.default_connection, "default-mysql");
+
   delete process.env.SQL_CONNECT_SEARCH_CONFIG;
   delete process.env.MYSQL_LIVE_PASSWORD;
 }

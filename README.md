@@ -135,7 +135,7 @@ Install a portable CLI command for this machine:
 npm link
 ```
 
-Create the default user config used by zero-argument `npx` / Claude setups:
+Optionally pre-create the default user config:
 
 ```powershell
 npx sql-connect-search-mcp@latest init
@@ -193,10 +193,11 @@ sql-connect-search-mcp --config config/shop-mysql.yaml
 Published npm flow with default user config:
 
 ```powershell
-npx sql-connect-search-mcp@latest init
 $env:MYSQL_LIVE_PASSWORD='your-password'
 npx sql-connect-search-mcp@latest
 ```
+
+If the default config does not exist yet, the CLI will create a starter config automatically and print the config path on startup.
 
 Repository-local command:
 
@@ -568,7 +569,8 @@ npm publish
 After publish, clients can use:
 
 ```powershell
-npx sql-connect-search-mcp@latest --config <path-to-config>
+$env:MYSQL_LIVE_PASSWORD='your-password'
+npx sql-connect-search-mcp@latest
 ```
 
 ## Recommended Next Steps

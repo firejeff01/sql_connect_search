@@ -1,5 +1,5 @@
 import { resolve } from "node:path";
-import { configFileExists, getDefaultConfigPath, writeStarterConfig } from "./config/DefaultConfigPaths.ts";
+import { ensureStarterConfig, getDefaultConfigPath, writeStarterConfig } from "./config/DefaultConfigPaths.ts";
 import { MCPServer } from "./server/MCPServer.ts";
 
 type CommandName = "serve" | "init" | "config-path";
@@ -75,9 +75,15 @@ async function run(): Promise<void> {
     return;
   }
 
-  if (!(await configFileExists(args.configPath))) {
-    throw new Error(
-      `Config file was not found at '${args.configPath}'. Run 'sql-connect-search-mcp init' to create a starter config, or pass --config <path>.`
+  const configStatus = await ensureStarterConfig(args.configPath);
+  if (configStatus === "created") {
+    process.stderr.write(
+      `${JSON.stringify({
+        status: "created",
+        configPath: args.configPath,
+        message:
+          "No config file was found. A starter config was created automatically. Update it with your database details before issuing database queries."
+      })}\n`
     );
   }
 

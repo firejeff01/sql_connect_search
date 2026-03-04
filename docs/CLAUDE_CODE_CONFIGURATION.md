@@ -16,7 +16,7 @@ Set the password first:
 $env:MYSQL_LIVE_PASSWORD = '<your_mysql_password>'
 ```
 
-Create the default user config once:
+Optional pre-step if you want to edit the starter config before the first launch:
 
 ```powershell
 npx sql-connect-search-mcp@latest init
@@ -41,6 +41,8 @@ Claude Code will launch this local STDIO MCP server:
 ```text
 npx -y sql-connect-search-mcp@latest
 ```
+
+If the default config does not exist yet, the package will create one automatically on first start.
 
 Repository-local fallback if you do not want to `npm link` yet:
 
@@ -90,13 +92,14 @@ For Claude Code, prefer the STDIO config:
 If Claude Code cannot start the server:
 
 1. Confirm `node` is on PATH.
-2. Confirm the default config exists by running `npx sql-connect-search-mcp@latest config-path`.
-3. Confirm `MYSQL_LIVE_PASSWORD` is visible in the same shell/session used to launch Claude Code.
-4. Run the launcher manually:
+2. Confirm the default config path by running `npx sql-connect-search-mcp@latest config-path`.
+3. If the config was auto-created, edit it with your database host, database name, and username.
+4. Confirm `MYSQL_LIVE_PASSWORD` is visible in the same shell/session used to launch Claude Code.
+5. Run the launcher manually:
 
 ```powershell
 $env:MYSQL_LIVE_PASSWORD = '<your_mysql_password>'
 npx -y sql-connect-search-mcp@latest
 ```
 
-5. If manual startup works, the remaining issue is usually Claude Code environment inheritance, not the MCP server itself.
+6. If manual startup works, the remaining issue is usually Claude Code environment inheritance, not the MCP server itself.

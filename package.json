@@ -1,6 +1,6 @@
 {
   "name": "sql-connect-search-mcp",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Read-only MCP-style database server for SQL and MongoDB access",
   "type": "module",
   "license": "MIT",

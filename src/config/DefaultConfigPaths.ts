@@ -82,3 +82,13 @@ export async function writeStarterConfig(configPath: string, force = false): Pro
   await writeFile(absolutePath, createStarterConfigYaml(), "utf8");
   return exists ? "overwritten" : "created";
 }
+
+export async function ensureStarterConfig(configPath: string): Promise<"created" | "existing"> {
+  const absolutePath = resolve(configPath);
+  if (await configFileExists(absolutePath)) {
+    return "existing";
+  }
+
+  await writeStarterConfig(absolutePath);
+  return "created";
+}

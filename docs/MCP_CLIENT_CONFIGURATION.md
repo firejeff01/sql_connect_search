@@ -34,10 +34,11 @@ sql-connect-search-mcp
 Published npm bootstrap flow:
 
 ```powershell
-npx sql-connect-search-mcp@latest init
 $env:MYSQL_LIVE_PASSWORD = '<your_mysql_password>'
 npx sql-connect-search-mcp@latest
 ```
+
+If the default config is missing, the package will create a starter config automatically on first launch.
 
 ## Standard Config
 
