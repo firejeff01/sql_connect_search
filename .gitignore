@@ -1,0 +1,11 @@
+node_modules/
+.schema-cache/
+
+.env
+*.log
+
+.cursor/*
+!.cursor/mcp.json
+
+.vscode/*
+!.vscode/mcp.json

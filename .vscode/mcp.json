@@ -1,0 +1,15 @@
+{
+  "servers": {
+    "sql-connect-search": {
+      "command": "node",
+      "args": [
+        "D:\\workspace\\mcp\\sql_connect_search\\scripts\\mcp-stdio-launcher.mjs",
+        "--config",
+        "D:\\workspace\\mcp\\sql_connect_search\\config\\shop-mysql.yaml"
+      ],
+      "env": {
+        "MYSQL_LIVE_PASSWORD": "${env:MYSQL_LIVE_PASSWORD}"
+      }
+    }
+  }
+}

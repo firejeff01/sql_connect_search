@@ -1,0 +1,57 @@
+connections:
+  - name: sales-db
+    type: mssql
+    host: 127.0.0.1
+    port: 1433
+    database: sales
+    username: readonly_user
+    passwordRef: ${MSSQL_PASSWORD}
+    aliases:
+      - prod_sales_ro
+  - name: mongo-db
+    type: mongodb
+    host: 127.0.0.1
+    port: 27017
+    database: analytics
+    username: readonly_user
+    passwordRef: ${MONGO_PASSWORD}
+
+pool:
+  max: 10
+  min: 2
+  idleTimeout: 30000
+
+limits:
+  max_rows: 1000
+  timeout: 30
+  result_size: 5
+  max_execution_time: 60
+
+audit:
+  enabled: true
+
+http:
+  port: 3000
+  bind: 127.0.0.1
+  api_keys:
+    - dev-api-key
+  auth_scheme: api_key
+  rate_limit:
+    per_key:
+      max: 100
+      window_ms: 60000
+  cors:
+    enabled: true
+    allowed_origins:
+      - "*"
+    allowed_methods:
+      - POST
+      - OPTIONS
+    allowed_headers:
+      - Content-Type
+      - Authorization
+
+credential:
+  provider: env
+
+default_connection: sales-db

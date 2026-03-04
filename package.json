@@ -1,0 +1,17 @@
+{
+  "name": "sql_connect_search",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node --experimental-strip-types src/index.ts",
+    "start:launcher": "node scripts/mcp-stdio-launcher.mjs",
+    "test": "node --experimental-strip-types test/run-tests.ts",
+    "demo:mysql-live": "node --experimental-strip-types scripts/mysql-live-demo.ts",
+    "demo:mysql-http": "node --experimental-strip-types scripts/mysql-http-demo.ts"
+  },
+  "dependencies": {
+    "mysql2": "^3.18.2",
+    "yaml": "^2.8.2"
+  }
+}

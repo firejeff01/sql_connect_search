@@ -1,0 +1,51 @@
+connections:
+  - name: shop-mysql
+    type: mysql2
+    host: 127.0.0.1
+    port: 3306
+    database: shop
+    username: root
+    passwordRef: ${MYSQL_LIVE_PASSWORD}
+    aliases:
+      - shop
+
+pool:
+  max: 10
+  min: 1
+  idleTimeout: 30000
+
+limits:
+  max_rows: 1000
+  timeout: 30
+  result_size: 5
+  max_execution_time: 60
+
+audit:
+  enabled: true
+
+http:
+  port: 3100
+  bind: 127.0.0.1
+  api_keys:
+    - shop-demo-key
+  auth_scheme: api_key
+  rate_limit:
+    per_key:
+      max: 100
+      window_ms: 60000
+  cors:
+    enabled: true
+    allowed_origins:
+      - "*"
+    allowed_methods:
+      - GET
+      - POST
+      - OPTIONS
+    allowed_headers:
+      - Content-Type
+      - Authorization
+
+credential:
+  provider: env
+
+default_connection: shop-mysql
