@@ -16,16 +16,22 @@ Set the password first:
 $env:MYSQL_LIVE_PASSWORD = '<your_mysql_password>'
 ```
 
+Create the default user config once:
+
+```powershell
+npx sql-connect-search-mcp@latest init
+```
+
 Add the MCP server to Claude Code:
 
 ```powershell
-claude mcp add sql-connect-search --scope user -- sql-connect-search-mcp --config D:\workspace\mcp\sql_connect_search\config\shop-mysql.yaml
+claude mcp add sql-connect-search --scope user -- npx -y sql-connect-search-mcp@latest
 ```
 
 If you want project scope instead:
 
 ```powershell
-claude mcp add sql-connect-search --scope project -- sql-connect-search-mcp --config D:\workspace\mcp\sql_connect_search\config\shop-mysql.yaml
+claude mcp add sql-connect-search --scope project -- npx -y sql-connect-search-mcp@latest
 ```
 
 ## What This Starts
@@ -33,7 +39,7 @@ claude mcp add sql-connect-search --scope project -- sql-connect-search-mcp --co
 Claude Code will launch this local STDIO MCP server:
 
 ```text
-sql-connect-search-mcp --config D:\workspace\mcp\sql_connect_search\config\shop-mysql.yaml
+npx -y sql-connect-search-mcp@latest
 ```
 
 Repository-local fallback if you do not want to `npm link` yet:
@@ -84,12 +90,13 @@ For Claude Code, prefer the STDIO config:
 If Claude Code cannot start the server:
 
 1. Confirm `node` is on PATH.
-2. Confirm `MYSQL_LIVE_PASSWORD` is visible in the same shell/session used to launch Claude Code.
-3. Run the launcher manually:
+2. Confirm the default config exists by running `npx sql-connect-search-mcp@latest config-path`.
+3. Confirm `MYSQL_LIVE_PASSWORD` is visible in the same shell/session used to launch Claude Code.
+4. Run the launcher manually:
 
 ```powershell
 $env:MYSQL_LIVE_PASSWORD = '<your_mysql_password>'
-sql-connect-search-mcp --config D:\workspace\mcp\sql_connect_search\config\shop-mysql.yaml
+npx -y sql-connect-search-mcp@latest
 ```
 
-4. If manual startup works, the remaining issue is usually Claude Code environment inheritance, not the MCP server itself.
+5. If manual startup works, the remaining issue is usually Claude Code environment inheritance, not the MCP server itself.

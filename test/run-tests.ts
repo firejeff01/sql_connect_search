@@ -5,6 +5,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { AuditLogger } from "../src/audit/AuditLogger.ts";
 import { ConfigLoader } from "../src/config/ConfigLoader.ts";
+import { createStarterConfigYaml, getDefaultConfigPath, writeStarterConfig } from "../src/config/DefaultConfigPaths.ts";
 import { ConnectionManager } from "../src/database/pool/ConnectionManager.ts";
 import { SchemaCache } from "../src/schema/SchemaCache.ts";
 import { MCPServer } from "../src/server/MCPServer.ts";
@@ -62,6 +63,38 @@ credential:
   const loader = new ConfigLoader();
   const config = await loader.loadConfig(join(dir, "config.yaml"));
   assert.equal(config.connections[0].password, "secret123");
+}
+
+async function testDefaultConfigHelpers(): Promise<void> {
+  const dir = await mkdtemp(join(tmpdir(), "sql-connect-search-default-config-"));
+  const configPath = join(dir, "starter.yaml");
+  process.env.SQL_CONNECT_SEARCH_CONFIG = configPath;
+  process.env.MYSQL_LIVE_PASSWORD = "starter-secret";
+  assert.equal(getDefaultConfigPath(), configPath);
+
+  const yaml = createStarterConfigYaml();
+  assert.match(yaml, /passwordRef: \$\{MYSQL_LIVE_PASSWORD\}/);
+
+  const firstStatus = await writeStarterConfig(configPath);
+  assert.equal(firstStatus, "created");
+
+  const loader = new ConfigLoader();
+  const config = await loader.loadConfig(configPath);
+  assert.equal(config.default_connection, "default-mysql");
+  assert.equal(config.connections[0].type, "mysql2");
+
+  let overwriteBlocked = false;
+  try {
+    await writeStarterConfig(configPath);
+  } catch (error: unknown) {
+    overwriteBlocked = String(error).includes("already exists");
+  }
+  assert.equal(overwriteBlocked, true);
+
+  const secondStatus = await writeStarterConfig(configPath, true);
+  assert.equal(secondStatus, "overwritten");
+  delete process.env.SQL_CONNECT_SEARCH_CONFIG;
+  delete process.env.MYSQL_LIVE_PASSWORD;
 }
 
 function testSqlValidator(): void {
@@ -789,6 +822,7 @@ async function testLiveMySqlIfConfigured(): Promise<void> {
 
 async function main(): Promise<void> {
   await testConfigLoader();
+  await testDefaultConfigHelpers();
   testSqlValidator();
   await testConnectionManager();
   await testLauncherCommand();

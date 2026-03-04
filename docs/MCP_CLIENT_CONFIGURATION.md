@@ -28,7 +28,15 @@ node D:\workspace\mcp\sql_connect_search\scripts\mcp-stdio-launcher.mjs --config
 Portable command after `npm link` or package install:
 
 ```powershell
-sql-connect-search-mcp --config D:\workspace\mcp\sql_connect_search\config\shop-mysql.yaml
+sql-connect-search-mcp
+```
+
+Published npm bootstrap flow:
+
+```powershell
+npx sql-connect-search-mcp@latest init
+$env:MYSQL_LIVE_PASSWORD = '<your_mysql_password>'
+npx sql-connect-search-mcp@latest
 ```
 
 ## Standard Config
