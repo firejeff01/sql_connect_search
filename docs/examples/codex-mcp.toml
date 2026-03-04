@@ -1,7 +1,6 @@
 [mcp_servers.sql-connect-search]
-command = "node"
+command = "sql-connect-search-mcp"
 args = [
-  "D:\\workspace\\mcp\\sql_connect_search\\scripts\\mcp-stdio-launcher.mjs",
   "--config",
   "D:\\workspace\\mcp\\sql_connect_search\\config\\shop-mysql.yaml",
 ]

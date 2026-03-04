@@ -17,7 +17,7 @@ Use local STDIO, not HTTP.
 Recommended command:
 
 ```text
-node D:\workspace\mcp\sql_connect_search\scripts\mcp-stdio-launcher.mjs --config D:\workspace\mcp\sql_connect_search\config\shop-mysql.yaml
+sql-connect-search-mcp --config D:\workspace\mcp\sql_connect_search\config\shop-mysql.yaml
 ```
 
 ## Standard MCP Config
@@ -27,9 +27,8 @@ Use this config when VS Code or a Copilot MCP UI asks for the server definition:
 ```json
 {
   "name": "sql-connect-search",
-  "command": "node",
+  "command": "sql-connect-search-mcp",
   "args": [
-    "D:\\workspace\\mcp\\sql_connect_search\\scripts\\mcp-stdio-launcher.mjs",
     "--config",
     "D:\\workspace\\mcp\\sql_connect_search\\config\\shop-mysql.yaml"
   ],
@@ -48,6 +47,7 @@ This repository now includes a workspace MCP config:
 - [mcp.json](/D:/workspace/mcp/sql_connect_search/.vscode/mcp.json)
 
 That is the preferred VS Code path because it avoids PowerShell JSON quoting issues with `code --add-mcp`.
+It also avoids requiring a prior `npm link`, so keep it for repo-local development.
 
 Before opening VS Code, set the environment variable:
 
@@ -62,7 +62,7 @@ Then open this workspace in VS Code.
 If your local VS Code build supports MCP CLI registration, use:
 
 ```powershell
-code --add-mcp "{""name"":""sql-connect-search"",""command"":""node"",""args"":[""D:\\workspace\\mcp\\sql_connect_search\\scripts\\mcp-stdio-launcher.mjs"",""--config"",""D:\\workspace\\mcp\\sql_connect_search\\config\\shop-mysql.yaml""],""env"":{""MYSQL_LIVE_PASSWORD"":""<your_mysql_password>""}}"
+code --add-mcp "{""name"":""sql-connect-search"",""command"":""sql-connect-search-mcp"",""args"":[""--config"",""D:\\workspace\\mcp\\sql_connect_search\\config\\shop-mysql.yaml""],""env"":{""MYSQL_LIVE_PASSWORD"":""<your_mysql_password>""}}"
 ```
 
 That follows the same model as the `chrome-devtools-mcp` documentation, but points to this MCP server.
@@ -78,8 +78,8 @@ If you are configuring MCP through the VS Code UI:
 2. Open the MCP server management / install flow available in your VS Code or Copilot build.
 3. Add a local MCP server.
 4. Use:
-   - `command`: `node`
-   - `args`: `D:\workspace\mcp\sql_connect_search\scripts\mcp-stdio-launcher.mjs`, `--config`, `D:\workspace\mcp\sql_connect_search\config\shop-mysql.yaml`
+   - `command`: `sql-connect-search-mcp`
+   - `args`: `--config`, `D:\workspace\mcp\sql_connect_search\config\shop-mysql.yaml`
    - `env`: `MYSQL_LIVE_PASSWORD=<your_mysql_password>`
 
 ## First Validation Prompt
@@ -107,7 +107,7 @@ If VS Code or Copilot cannot connect:
 
 ```powershell
 $env:MYSQL_LIVE_PASSWORD = '<your_mysql_password>'
-node D:\workspace\mcp\sql_connect_search\scripts\mcp-stdio-launcher.mjs --config D:\workspace\mcp\sql_connect_search\config\shop-mysql.yaml
+sql-connect-search-mcp --config D:\workspace\mcp\sql_connect_search\config\shop-mysql.yaml
 ```
 
 4. If the command waits with a blinking cursor, that is expected. The server is ready and waiting for an MCP client.

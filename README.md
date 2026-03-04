@@ -123,10 +123,22 @@ Install dependencies:
 npm install
 ```
 
+Install a portable CLI command for this machine:
+
+```powershell
+npm link
+```
+
 Run tests:
 
 ```powershell
 npm test
+```
+
+Preview what would be published:
+
+```powershell
+npm run pack:check
 ```
 
 ## MySQL Demo
@@ -159,11 +171,18 @@ Client-specific configuration examples:
 
 ## STDIO Usage
 
-Start server:
+Portable command after `npm link` or global install:
 
 ```powershell
 $env:MYSQL_LIVE_PASSWORD='your-password'
-node --experimental-strip-types src/index.ts --config config/shop-mysql.yaml
+sql-connect-search-mcp --config config/shop-mysql.yaml
+```
+
+Repository-local command:
+
+```powershell
+$env:MYSQL_LIVE_PASSWORD='your-password'
+npm run mcp -- --config config/shop-mysql.yaml
 ```
 
 Send request on stdin:
@@ -276,7 +295,7 @@ Start HTTP server:
 
 ```powershell
 $env:MYSQL_LIVE_PASSWORD='your-password'
-node --experimental-strip-types src/index.ts --config config/shop-mysql-http.yaml --http --port 3100
+sql-connect-search-mcp --config config/shop-mysql-http.yaml --http --port 3100
 ```
 
 Health check:
@@ -488,6 +507,13 @@ Invoke-RestMethod http://127.0.0.1:3100/mcp -Method Post -Headers $headers -Body
 
 - Not a full MCP spec implementation yet
 - MongoDB transport path is protocol-ready, but only MySQL has real live-driver verification in this repo
+
+## Packaging Notes
+
+- `sql-connect-search-mcp` is the published CLI name exposed from `package.json`
+- the bin entry points to [mcp-stdio-launcher.mjs](/D:/workspace/mcp/sql_connect_search/scripts/mcp-stdio-launcher.mjs)
+- clients can use the portable command after `npm link`, local install, or a future npm/GitHub package install
+- workspace files such as [.vscode/mcp.json](/D:/workspace/mcp/sql_connect_search/.vscode/mcp.json) and [.cursor/mcp.json](/D:/workspace/mcp/sql_connect_search/.cursor/mcp.json) remain repo-local examples and still use the in-repo path
 
 ## Recommended Next Steps
 

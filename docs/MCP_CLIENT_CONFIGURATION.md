@@ -25,9 +25,36 @@ Recommended local launcher:
 node D:\workspace\mcp\sql_connect_search\scripts\mcp-stdio-launcher.mjs --config D:\workspace\mcp\sql_connect_search\config\shop-mysql.yaml
 ```
 
+Portable command after `npm link` or package install:
+
+```powershell
+sql-connect-search-mcp --config D:\workspace\mcp\sql_connect_search\config\shop-mysql.yaml
+```
+
 ## Standard Config
 
 Use this standard local MCP config anywhere a client accepts `command`, `args`, and optional `env`.
+
+Portable installed form:
+
+```json
+{
+  "mcpServers": {
+    "sql-connect-search": {
+      "command": "sql-connect-search-mcp",
+      "args": [
+        "--config",
+        "D:\\workspace\\mcp\\sql_connect_search\\config\\shop-mysql.yaml"
+      ],
+      "env": {
+        "MYSQL_LIVE_PASSWORD": "<your_mysql_password>"
+      }
+    }
+  }
+}
+```
+
+Repository-local form:
 
 ```json
 {
@@ -54,7 +81,7 @@ Use this standard local MCP config anywhere a client accepts `command`, `args`, 
 Use the standard config above, or add it with the CLI:
 
 ```powershell
-amp mcp add sql-connect-search -- node D:\workspace\mcp\sql_connect_search\scripts\mcp-stdio-launcher.mjs --config D:\workspace\mcp\sql_connect_search\config\shop-mysql.yaml
+amp mcp add sql-connect-search -- sql-connect-search-mcp --config D:\workspace\mcp\sql_connect_search\config\shop-mysql.yaml
 ```
 
 ### Antigravity
@@ -65,9 +92,8 @@ If Antigravity expects a browser-bound MCP server, follow its custom MCP install
 {
   "mcpServers": {
     "sql-connect-search": {
-      "command": "node",
+      "command": "sql-connect-search-mcp",
       "args": [
-        "D:\\workspace\\mcp\\sql_connect_search\\scripts\\mcp-stdio-launcher.mjs",
         "--config",
         "D:\\workspace\\mcp\\sql_connect_search\\config\\shop-mysql.yaml"
       ],
@@ -87,7 +113,7 @@ Dedicated setup guide:
 - [CLAUDE_CODE_CONFIGURATION.md](/D:/workspace/mcp/sql_connect_search/docs/CLAUDE_CODE_CONFIGURATION.md)
 
 ```powershell
-claude mcp add sql-connect-search --scope user node D:\workspace\mcp\sql_connect_search\scripts\mcp-stdio-launcher.mjs --config D:\workspace\mcp\sql_connect_search\config\shop-mysql.yaml
+claude mcp add sql-connect-search --scope user -- sql-connect-search-mcp --config D:\workspace\mcp\sql_connect_search\config\shop-mysql.yaml
 ```
 
 ### Cline
@@ -102,7 +128,7 @@ Dedicated setup guide:
 Use the standard config above, or add it with:
 
 ```powershell
-codex mcp add sql-connect-search -- node D:\workspace\mcp\sql_connect_search\scripts\mcp-stdio-launcher.mjs --config D:\workspace\mcp\sql_connect_search\config\shop-mysql.yaml
+codex mcp add sql-connect-search -- sql-connect-search-mcp --config D:\workspace\mcp\sql_connect_search\config\shop-mysql.yaml
 ```
 
 If the host requires a shell wrapper on Windows, use:
@@ -112,8 +138,7 @@ If the host requires a shell wrapper on Windows, use:
 command = "cmd"
 args = [
   "/c",
-  "node",
-  "D:\\workspace\\mcp\\sql_connect_search\\scripts\\mcp-stdio-launcher.mjs",
+  "sql-connect-search-mcp",
   "--config",
   "D:\\workspace\\mcp\\sql_connect_search\\config\\shop-mysql.yaml",
 ]
@@ -126,7 +151,7 @@ startup_timeout_ms = 20000
 In the interactive MCP add flow, use this local command:
 
 ```text
-node D:\workspace\mcp\sql_connect_search\scripts\mcp-stdio-launcher.mjs --config D:\workspace\mcp\sql_connect_search\config\shop-mysql.yaml
+sql-connect-search-mcp --config D:\workspace\mcp\sql_connect_search\config\shop-mysql.yaml
 ```
 
 ### Copilot / VS Code
@@ -146,7 +171,7 @@ Use the standard config above.
 ### Factory CLI
 
 ```powershell
-droid mcp add sql-connect-search "node D:\workspace\mcp\sql_connect_search\scripts\mcp-stdio-launcher.mjs --config D:\workspace\mcp\sql_connect_search\config\shop-mysql.yaml"
+droid mcp add sql-connect-search "sql-connect-search-mcp --config D:\workspace\mcp\sql_connect_search\config\shop-mysql.yaml"
 ```
 
 ### Gemini CLI
@@ -154,13 +179,13 @@ droid mcp add sql-connect-search "node D:\workspace\mcp\sql_connect_search\scrip
 Project scoped:
 
 ```powershell
-gemini mcp add sql-connect-search node D:\workspace\mcp\sql_connect_search\scripts\mcp-stdio-launcher.mjs --config D:\workspace\mcp\sql_connect_search\config\shop-mysql.yaml
+gemini mcp add sql-connect-search sql-connect-search-mcp --config D:\workspace\mcp\sql_connect_search\config\shop-mysql.yaml
 ```
 
 User scoped:
 
 ```powershell
-gemini mcp add -s user sql-connect-search node D:\workspace\mcp\sql_connect_search\scripts\mcp-stdio-launcher.mjs --config D:\workspace\mcp\sql_connect_search\config\shop-mysql.yaml
+gemini mcp add -s user sql-connect-search sql-connect-search-mcp --config D:\workspace\mcp\sql_connect_search\config\shop-mysql.yaml
 ```
 
 ### Gemini Code Assist
@@ -187,7 +212,7 @@ Step 1. Start the server in HTTP mode:
 
 ```powershell
 $env:MYSQL_LIVE_PASSWORD = '<your_mysql_password>'
-node D:\workspace\mcp\sql_connect_search\scripts\mcp-stdio-launcher.mjs --config D:\workspace\mcp\sql_connect_search\config\shop-mysql-http.yaml --http --port 3100
+sql-connect-search-mcp --config D:\workspace\mcp\sql_connect_search\config\shop-mysql-http.yaml --http --port 3100
 ```
 
 Step 2. In Katalon Studio / StudioAssist, add the server with:
@@ -207,8 +232,7 @@ Use this `opencode.json` snippet:
     "sql-connect-search": {
       "type": "local",
       "command": [
-        "node",
-        "D:\\workspace\\mcp\\sql_connect_search\\scripts\\mcp-stdio-launcher.mjs",
+        "sql-connect-search-mcp",
         "--config",
         "D:\\workspace\\mcp\\sql_connect_search\\config\\shop-mysql.yaml"
       ],
@@ -229,13 +253,13 @@ Use the standard config above.
 Project scoped:
 
 ```powershell
-qodercli mcp add sql-connect-search -- node D:\workspace\mcp\sql_connect_search\scripts\mcp-stdio-launcher.mjs --config D:\workspace\mcp\sql_connect_search\config\shop-mysql.yaml
+qodercli mcp add sql-connect-search -- sql-connect-search-mcp --config D:\workspace\mcp\sql_connect_search\config\shop-mysql.yaml
 ```
 
 User scoped:
 
 ```powershell
-qodercli mcp add -s user sql-connect-search -- node D:\workspace\mcp\sql_connect_search\scripts\mcp-stdio-launcher.mjs --config D:\workspace\mcp\sql_connect_search\config\shop-mysql.yaml
+qodercli mcp add -s user sql-connect-search -- sql-connect-search-mcp --config D:\workspace\mcp\sql_connect_search\config\shop-mysql.yaml
 ```
 
 ### Visual Studio
@@ -253,6 +277,7 @@ Use the standard config above.
 ## Compatibility Notes
 
 - The launcher script avoids requiring clients to pass `--experimental-strip-types` directly.
+- After `npm link`, clients can call `sql-connect-search-mcp` without hard-coding the repository script path.
 - This server is currently best integrated over STDIO for desktop MCP clients and AI IDEs.
 - HTTP mode is available and is the preferred path for tools such as Katalon Studio that expect an MCP proxy or direct HTTP endpoint.
 - If a client cannot store secrets in config, set `MYSQL_LIVE_PASSWORD` in the OS environment before launching that client.
@@ -263,8 +288,10 @@ You can test the exact launcher outside any client first:
 
 ```powershell
 $env:MYSQL_LIVE_PASSWORD = '<your_mysql_password>'
-node D:\workspace\mcp\sql_connect_search\scripts\mcp-stdio-launcher.mjs --config D:\workspace\mcp\sql_connect_search\config\shop-mysql.yaml
+sql-connect-search-mcp --config D:\workspace\mcp\sql_connect_search\config\shop-mysql.yaml
 ```
+
+If you have not run `npm link`, fall back to the repository-local launcher command shown earlier in this guide.
 
 Then send:
 

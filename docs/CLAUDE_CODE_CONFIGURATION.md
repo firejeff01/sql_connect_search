@@ -19,13 +19,13 @@ $env:MYSQL_LIVE_PASSWORD = '<your_mysql_password>'
 Add the MCP server to Claude Code:
 
 ```powershell
-claude mcp add sql-connect-search --scope user node D:\workspace\mcp\sql_connect_search\scripts\mcp-stdio-launcher.mjs --config D:\workspace\mcp\sql_connect_search\config\shop-mysql.yaml
+claude mcp add sql-connect-search --scope user -- sql-connect-search-mcp --config D:\workspace\mcp\sql_connect_search\config\shop-mysql.yaml
 ```
 
 If you want project scope instead:
 
 ```powershell
-claude mcp add sql-connect-search --scope project node D:\workspace\mcp\sql_connect_search\scripts\mcp-stdio-launcher.mjs --config D:\workspace\mcp\sql_connect_search\config\shop-mysql.yaml
+claude mcp add sql-connect-search --scope project -- sql-connect-search-mcp --config D:\workspace\mcp\sql_connect_search\config\shop-mysql.yaml
 ```
 
 ## What This Starts
@@ -33,13 +33,13 @@ claude mcp add sql-connect-search --scope project node D:\workspace\mcp\sql_conn
 Claude Code will launch this local STDIO MCP server:
 
 ```text
-node D:\workspace\mcp\sql_connect_search\scripts\mcp-stdio-launcher.mjs --config D:\workspace\mcp\sql_connect_search\config\shop-mysql.yaml
+sql-connect-search-mcp --config D:\workspace\mcp\sql_connect_search\config\shop-mysql.yaml
 ```
 
-That launcher then starts:
+Repository-local fallback if you do not want to `npm link` yet:
 
 ```text
-node --experimental-strip-types D:\workspace\mcp\sql_connect_search\src\index.ts --config D:\workspace\mcp\sql_connect_search\config\shop-mysql.yaml
+node D:\workspace\mcp\sql_connect_search\scripts\mcp-stdio-launcher.mjs --config D:\workspace\mcp\sql_connect_search\config\shop-mysql.yaml
 ```
 
 ## Expected Server Capabilities
@@ -89,7 +89,7 @@ If Claude Code cannot start the server:
 
 ```powershell
 $env:MYSQL_LIVE_PASSWORD = '<your_mysql_password>'
-node D:\workspace\mcp\sql_connect_search\scripts\mcp-stdio-launcher.mjs --config D:\workspace\mcp\sql_connect_search\config\shop-mysql.yaml
+sql-connect-search-mcp --config D:\workspace\mcp\sql_connect_search\config\shop-mysql.yaml
 ```
 
 4. If manual startup works, the remaining issue is usually Claude Code environment inheritance, not the MCP server itself.

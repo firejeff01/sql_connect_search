@@ -1,12 +1,26 @@
 {
-  "name": "sql_connect_search",
+  "name": "sql-connect-search-mcp",
   "version": "0.1.0",
-  "private": true,
+  "description": "Read-only MCP-style database server for SQL and MongoDB access",
   "type": "module",
+  "bin": {
+    "sql-connect-search-mcp": "./scripts/mcp-stdio-launcher.mjs"
+  },
+  "files": [
+    "src/",
+    "config/*.yaml",
+    "scripts/",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=22.6.0"
+  },
   "scripts": {
     "start": "node --experimental-strip-types src/index.ts",
+    "mcp": "node scripts/mcp-stdio-launcher.mjs",
     "start:launcher": "node scripts/mcp-stdio-launcher.mjs",
     "test": "node --experimental-strip-types test/run-tests.ts",
+    "pack:check": "npm pack --dry-run --cache .npm-cache",
     "demo:mysql-live": "node --experimental-strip-types scripts/mysql-live-demo.ts",
     "demo:mysql-http": "node --experimental-strip-types scripts/mysql-http-demo.ts"
   },

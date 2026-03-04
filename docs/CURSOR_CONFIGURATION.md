@@ -14,7 +14,7 @@ Use local STDIO, not HTTP.
 Recommended command:
 
 ```text
-node D:\workspace\mcp\sql_connect_search\scripts\mcp-stdio-launcher.mjs --config D:\workspace\mcp\sql_connect_search\config\shop-mysql.yaml
+sql-connect-search-mcp --config D:\workspace\mcp\sql_connect_search\config\shop-mysql.yaml
 ```
 
 ## Cursor MCP Config
@@ -25,9 +25,8 @@ Use this config when Cursor asks for the MCP server definition:
 {
   "mcpServers": {
     "sql-connect-search": {
-      "command": "node",
+      "command": "sql-connect-search-mcp",
       "args": [
-        "D:\\workspace\\mcp\\sql_connect_search\\scripts\\mcp-stdio-launcher.mjs",
         "--config",
         "D:\\workspace\\mcp\\sql_connect_search\\config\\shop-mysql.yaml"
       ],
@@ -56,6 +55,7 @@ $env:MYSQL_LIVE_PASSWORD = '<your_mysql_password>'
 Then open this project in Cursor.
 
 This is the preferred path because the project carries its own MCP definition and you do not need to re-enter the server by hand.
+It is also the fallback when you have not run `npm link`.
 
 ## Setup Steps
 
@@ -93,7 +93,7 @@ If Cursor shows the server but cannot connect:
 
 ```powershell
 $env:MYSQL_LIVE_PASSWORD = '<your_mysql_password>'
-node D:\workspace\mcp\sql_connect_search\scripts\mcp-stdio-launcher.mjs --config D:\workspace\mcp\sql_connect_search\config\shop-mysql.yaml
+sql-connect-search-mcp --config D:\workspace\mcp\sql_connect_search\config\shop-mysql.yaml
 ```
 
 4. If the command waits with a blinking cursor, that is expected. The server is ready and waiting for an MCP client.

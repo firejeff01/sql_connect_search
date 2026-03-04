@@ -19,7 +19,13 @@ Codex CLI also supports:
 
 ## Recommended Command
 
-Use the local STDIO launcher:
+Preferred portable command after `npm link`:
+
+```text
+sql-connect-search-mcp --config D:\workspace\mcp\sql_connect_search\config\shop-mysql.yaml
+```
+
+Repository-local fallback:
 
 ```text
 node D:\workspace\mcp\sql_connect_search\scripts\mcp-stdio-launcher.mjs --config D:\workspace\mcp\sql_connect_search\config\shop-mysql.yaml
@@ -30,14 +36,14 @@ node D:\workspace\mcp\sql_connect_search\scripts\mcp-stdio-launcher.mjs --config
 Run this in PowerShell:
 
 ```powershell
-codex mcp add sql-connect-search --env MYSQL_LIVE_PASSWORD=<your_mysql_password> -- node D:\workspace\mcp\sql_connect_search\scripts\mcp-stdio-launcher.mjs --config D:\workspace\mcp\sql_connect_search\config\shop-mysql.yaml
+codex mcp add sql-connect-search --env MYSQL_LIVE_PASSWORD=<your_mysql_password> -- sql-connect-search-mcp --config D:\workspace\mcp\sql_connect_search\config\shop-mysql.yaml
 ```
 
 If you do not want to store the password in the MCP registration command, set it in the OS environment first:
 
 ```powershell
 $env:MYSQL_LIVE_PASSWORD = '<your_mysql_password>'
-codex mcp add sql-connect-search -- node D:\workspace\mcp\sql_connect_search\scripts\mcp-stdio-launcher.mjs --config D:\workspace\mcp\sql_connect_search\config\shop-mysql.yaml
+codex mcp add sql-connect-search -- sql-connect-search-mcp --config D:\workspace\mcp\sql_connect_search\config\shop-mysql.yaml
 ```
 
 ## Validation
@@ -58,7 +64,7 @@ Remove and re-add:
 
 ```powershell
 codex mcp remove sql-connect-search
-codex mcp add sql-connect-search --env MYSQL_LIVE_PASSWORD=<your_mysql_password> -- node D:\workspace\mcp\sql_connect_search\scripts\mcp-stdio-launcher.mjs --config D:\workspace\mcp\sql_connect_search\config\shop-mysql.yaml
+codex mcp add sql-connect-search --env MYSQL_LIVE_PASSWORD=<your_mysql_password> -- sql-connect-search-mcp --config D:\workspace\mcp\sql_connect_search\config\shop-mysql.yaml
 ```
 
 ## Config Snippet
@@ -67,9 +73,8 @@ If you prefer to document the resulting server shape, use this reference:
 
 ```toml
 [mcp_servers.sql-connect-search]
-command = "node"
+command = "sql-connect-search-mcp"
 args = [
-  "D:\\workspace\\mcp\\sql_connect_search\\scripts\\mcp-stdio-launcher.mjs",
   "--config",
   "D:\\workspace\\mcp\\sql_connect_search\\config\\shop-mysql.yaml",
 ]
@@ -99,3 +104,4 @@ Expected MCP flow:
 - Codex CLI supports `--env`, so this client is simpler than Claude Code on Windows.
 - For this server, STDIO is the recommended path.
 - HTTP mode is available, but not needed for Codex CLI.
+- If you have not run `npm link`, use the repository-local fallback command instead.

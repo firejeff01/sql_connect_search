@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { spawn } from "node:child_process";
 import { mkdtemp, readdir, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -93,6 +94,109 @@ async function testConnectionManager(): Promise<void> {
   assert.equal(manager.resolveConnectionName(), "sales-db");
   assert.equal(manager.resolveConnectionName("prod_sales_ro"), "sales-db");
   assert.equal(manager.listConnections().length, 1);
+}
+
+async function testLauncherCommand(): Promise<void> {
+  const dir = await mkdtemp(join(tmpdir(), "sql-connect-search-launcher-"));
+  const configPath = join(dir, "config.yaml");
+  await writeFile(
+    configPath,
+    `
+connections:
+  - name: sales-db
+    type: mssql
+    host: 127.0.0.1
+    port: 1433
+    database: sales
+    username: readonly
+pool:
+  max: 10
+  min: 2
+  idleTimeout: 30000
+limits:
+  max_rows: 1000
+  timeout: 30
+  result_size: 5
+  max_execution_time: 60
+audit:
+  enabled: true
+credential:
+  provider: env
+`.trim(),
+    "utf8"
+  );
+
+  try {
+    await new Promise<void>((resolvePromise, rejectPromise) => {
+      const child = spawn(process.execPath, ["scripts/mcp-stdio-launcher.mjs", "--config", configPath], {
+        cwd: process.cwd(),
+        stdio: ["pipe", "pipe", "pipe"],
+        env: process.env
+      });
+
+      let stdout = "";
+      let stderr = "";
+
+      const timeout = setTimeout(() => {
+        child.kill("SIGTERM");
+        rejectPromise(new Error(`Launcher timed out. stdout=${stdout} stderr=${stderr}`));
+      }, 5000);
+
+      child.stdout.setEncoding("utf8");
+      child.stderr.setEncoding("utf8");
+
+      child.stdout.on("data", (chunk: string) => {
+        stdout += chunk;
+        const line = stdout.split(/\r?\n/).find((item) => item.trim().length > 0);
+        if (!line) {
+          return;
+        }
+
+        clearTimeout(timeout);
+        child.kill("SIGTERM");
+
+        try {
+          const response = JSON.parse(line) as {
+            jsonrpc: string;
+            id: number;
+            result?: { protocolVersion?: string };
+          };
+          assert.equal(response.jsonrpc, "2.0");
+          assert.equal(response.id, 1);
+          assert.equal(typeof response.result?.protocolVersion, "string");
+          resolvePromise();
+        } catch (error: unknown) {
+          rejectPromise(error);
+        }
+      });
+
+      child.stderr.on("data", (chunk: string) => {
+        stderr += chunk;
+      });
+
+      child.on("error", (error: Error) => {
+        clearTimeout(timeout);
+        rejectPromise(error);
+      });
+
+      child.on("exit", (code, signal) => {
+        if (signal === "SIGTERM" || code === 0) {
+          return;
+        }
+        clearTimeout(timeout);
+        rejectPromise(new Error(`Launcher exited unexpectedly. code=${code} stderr=${stderr}`));
+      });
+
+      child.stdin.write(`${JSON.stringify({ jsonrpc: "2.0", id: 1, method: "initialize", params: {} })}\n`);
+    });
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : String(error);
+    if (message.includes("spawn EPERM")) {
+      process.stdout.write("Launcher smoke test skipped\n");
+      return;
+    }
+    throw error;
+  }
 }
 
 async function testSchemaCachePersistence(): Promise<void> {
@@ -687,6 +791,7 @@ async function main(): Promise<void> {
   await testConfigLoader();
   testSqlValidator();
   await testConnectionManager();
+  await testLauncherCommand();
   await testSchemaCachePersistence();
   await testQueryTool();
   await testRegistryAndServer();
